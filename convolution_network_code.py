@@ -78,10 +78,10 @@ input_dim = [3, 32, 32]
 
 model = FirstConvNet(num_filters=[16, 32, 64, 128], filter_size=3,
                           input_dim=input_dim, hidden_dims=[256, 256],
-                          dtype=np.float64,use_batchnorm = True, reg=0.05)
+                          dtype=np.float64,use_batchnorm = True, reg=0.05, weight_scale=0.05)
 
 solver = Solver(model, data,
-                num_epochs=2000, batch_size=50,
+                num_epochs=20, batch_size=50,
                 update_rule='adam',
                 optim_config={
                   'learning_rate': 1e-3,
@@ -89,3 +89,35 @@ solver = Solver(model, data,
                 verbose=True, print_every=20)
 solver.train()
 
+y_test_pred = np.argmax(model.loss(data['X_test']), axis=1)
+y_val_pred = np.argmax(model.loss(data['X_val']), axis=1)
+print('Validation set accuracy: ', (y_val_pred == data['y_val']).mean())
+print('Test set accuracy: ', (y_test_pred == data['y_test']).mean())
+
+
+model2 = FirstConvNet(num_filters=[16, 32, 64, 128], filter_size=3,
+                          input_dim=input_dim, hidden_dims=[500, 500],
+                          dtype=np.float64,use_batchnorm = True, reg=0.05, weight_scale=0.05)
+
+solver2 = Solver(model2, data,
+                num_epochs=5, batch_size=50,
+                update_rule='adam',
+                optim_config={
+                  'learning_rate': 1e-3,
+                },
+                verbose=True, print_every=20)
+solver2.train()
+
+
+y_test_pred = np.argmax(model2.loss(data['X_test']), axis=1)
+y_val_pred = np.argmax(model2.loss(data['X_val']), axis=1)
+print('Validation set accuracy: ', (y_val_pred == data['y_val']).mean())
+print('Test set accuracy: ', (y_test_pred == data['y_test']).mean())
+
+scores = model.loss(data['X_test'])
+scores2 = model2.loss(data['X_test'])
+
+avg_score = (scores+scores2)/2
+
+y_test_pred = np.argmax(avg_score, axis=1)
+print('Test set accuracy: ', (y_test_pred == data['y_test']).mean())
